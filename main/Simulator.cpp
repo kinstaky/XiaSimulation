@@ -63,56 +63,12 @@ Simulator::Simulator() {
 	path = "";
 	fileName = "";
 	zeroPoint = 0;
+	verbose = true;
 }
 
 Simulator::~Simulator() {
 	if (file) file->Close();
 }
-
-// // Add TraceReader to the simulator
-// void Simulator::AddReader(TraceReader *reader_) {
-// 	reader = reader_;
-// 	return;
-// }
-
-
-// // Add slow filter to the simulator
-// void Simulator::AddSlowFilter(FilterAlgorithm *algorithm_) {
-// 	slowFilter = algorithm_;
-// 	return;
-// }
-
-// // Add fast filter to the simulator
-// void Simulator::AddFastFilter(FilterAlgorithm *algorithm_) {
-// 	fastFilter = algorithm_;
-// 	return;
-// }
-
-// // Add CFD filter to the simulator
-// void Simulator::AddCFDFilter(FilterAlgorithm *algorithm_) {
-// 	cfdFilter = algorithm_;
-// 	return;
-// }
-
-
-// // Add slow picker to the simulator
-// void Simulator::AddSlowPicker(Picker *picker_) {
-// 	slowPicker = picker_;
-// 	return;
-// }
-
-// // Add fast picker to the simulator
-// void Simulator::AddFastPicker(Picker *picker_) {
-// 	fastPicker = picker_;
-// 	return;
-// }
-
-// // Add slow picker to the simulator
-// void Simulator::AddCFDPicker(Picker *picker_) {
-// 	cfdPicker = picker_;
-// 	return;
-// }
-
 
 void Simulator::AddReader(std::unique_ptr<TraceReader> reader_) {
 	reader = std::move(reader_);
@@ -153,25 +109,6 @@ void Simulator::AddCFDPicker(std::unique_ptr<Picker> picker_) {
 }
 
 
-// // Set fast filter threshold
-// void Simulator::SetFastThres(int ft) {
-// 	fastThres = ft;
-// 	return;
-// }
-
-// // Set CFD threshold
-// void Simulator::SetCFDThres(int thres) {
-// 	cfdThres = thres;
-// 	return;
-// }
-
-// // Set flags of using cubic CFD
-// void Simulator::SetCubicCFD(bool cubic) {
-// 	useCubicCFD = cubic;
-// 	return;
-// }
-
-
 // Set file path
 void Simulator::SetPath(const char *p) {
 	path = TString(p);
@@ -192,124 +129,12 @@ void Simulator::SetZeroPoint(unsigned int zero_) {
 	return;
 }
 
-// // find energy in slow filter data
-// double Simulator::aveFlatTop(const std::vector<double> &data, int ts, int l, int m) {
-// 	int fl = 0;                                             // left and right border of flat top
-// 	int fr = 0;
-// 	double minEL = 0.0;
-// 	double minER = 0.0;
-// 	const int diffLen = 8;
-// 	for (int i = ts-11+l; i != ts-1+l; ++i) {
-// 		double diff = 0.0;
-// 		diff += data[i+diffLen]*2 + data[i+diffLen+1] + data[i+diffLen-1];
-// 		diff += data[i-diffLen]*2 + data[i-diffLen-1] + data[i+diffLen+1];
-// 		diff -= data[i]*4 + data[i-1]*2 + data[i+1]*2;
-// 		if (diff < minEL) {
-// 			minEL = diff;
-// 			fl = i;
-// 		}
-// 	}
-// 	for (int i = ts-11+m; i != ts-1+m; ++i) {
-// 		double diff = 0.0;
-// 		diff += data[i+diffLen]*2 + data[i+diffLen+1] + data[i+diffLen-1];
-// 		diff += data[i-diffLen]*2 + data[i-diffLen-1] + data[i+diffLen+1];
-// 		diff -= data[i]*4 + data[i-1]*2 + data[i+1]*2;
-// 		if (diff < minER) {
-// 			minER = diff;
-// 			fr = i;
-// 		}
-// 	}
-// 	return data[fr];
-// 	double aveE = 0.0;
-// 	for (int i = fl; i != fr; ++i) {
-// 		aveE += data[i];
-// 	}
-// 	aveE /= fr - fl;
-// 	return aveE;
-// }
+// Set print verbose
+void Simulator::SetVerbose(bool verbose_) {
+	verbose = verbose_;
+	return;
+}
 
-// // find timestamp
-// int Simulator::timeStamp(const std::vector<double> &data, int thres) {
-// 	int ts = 0;
-// 	int vsize = data.size();
-// 	for (; ts != vsize; ++ts) {
-// 		if (data[ts] > thres) break;
-// 	}
-//     return ts;
-// }
-
-// // compute cfd fraction
-// double Simulator::linearCfdFraction(const std::vector<double> &data, int thres, short &point) {
-// 	bool overThres = false;
-// 	size_t vsize = data.size();
-// 	for (size_t i = 995; i != vsize-1; ++i) {
-// 		if (data[i] > thres) overThres = true;
-// 		if (!overThres) continue;
-// 		if (data[i] >= 0 && data[i+1] < 0) {
-// 			// std::cout << i << ":  " << data[i] << "  " << data[i+1] << std::endl;
-// 			point = i;
-// 			return data[i] / (data[i]-data[i+1]);
-// 		}
-// 	}
-// 	point = -1;
-// 	return 0.0;
-// }
-
-
-// double Simulator::cubicCfdFraction(const std::vector<double> &data, int thres, short &point) {
-// 	bool overThres = false;
-// 	size_t vsize = data.size();
-// 	for (size_t i = 995; i != vsize-1; ++i) {
-// 		if (data[i] > thres) overThres = true;
-// 		if (!overThres) continue;
-// 		if (data[i] >= 0 && data[i+1] < 0) {
-// 			point = i;
-
-// 			double y1 = data[i-1];
-// 			double y2 = data[i];
-// 			double y3 = data[i+1];
-// 			double y4 = data[i+2];
-// 			double c0 = y2;
-// 			double c1 = -y4/6.0 + y3 - y2/2.0 - y1/3.0;
-// 			double c2 = y3/2.0 - y2 + y1/2.0;
-// 			double c3 = y4/6.0 -y3/2.0 + y2/2.0 - y1/6.0;
-
-// 			// std::cout << i << ":  " << y1 << "  " << y2 << "  " << y3 << "  " << y4 << std::endl;
-
-
-// 			std::function<double(double)> cubic = [=](double x) {
-// 				double t = c3;
-// 				t = t * x + c2;
-// 				t = t * x + c1;
-// 				t = t * x + c0;
-// 				return t;
-// 			};
-// 			// binary search for zero point
-
-// 			double l = 0.0;
-// 			double r = 1.0;
-// 			double m;
-// 			const double eps = 1e-6;
-// 			const int loop = 1000;
-// 			for (int i = 0; i != loop; ++i) {
-// 				m = (l+r)/2.0;
-// 				double mv = cubic(m);
-// 				if (abs(mv) < eps) {
-// 					return m;
-// 				}
-// 				if (mv < 0) {
-// 					r = m;
-// 				} else {
-// 					l = m;
-// 				}
-// 			}
-
-// 			return (l+r)/2.0;
-// 		}
-// 	}
-// 	point = -1;
-// 	return 0.0;
-// }
 
 
 //--------------------------------------------------
@@ -544,8 +369,10 @@ void TTreeSimulator::Run(unsigned int entries, RunFlag flag) {
 	auto otherTime = duration_cast<microseconds>(stop - start);
 
 	unsigned int entries100 = entries / 100 + 1;
-	std::cout << "run   0%";
-	std::cout.flush();
+	if (verbose) {
+		std::cout << "run   0%";
+		std::cout.flush();
+	}
 	for (unsigned int t = 0; t != entries; ++t) {
 
 		stop = std::chrono::high_resolution_clock::now();
@@ -645,14 +472,16 @@ void TTreeSimulator::Run(unsigned int entries, RunFlag flag) {
 
 
 		tree->Fill();
-		if (t % entries100 == 0) {
+		if (verbose && (t % entries100 == 0)) {
 			std::cout << "\b\b\b\b" << std::setw(3) << t/entries100 << "%";
 			std::cout.flush();
 		}
 
 
 	}
-	std::cout << "\b\b\b\b100%" << std::endl;
+	if (verbose){
+		std::cout << "\b\b\b\b100%" << std::endl;
+	}
 
 	file->cd();
 	if (hEnergy) hEnergy->Write();
@@ -661,14 +490,16 @@ void TTreeSimulator::Run(unsigned int entries, RunFlag flag) {
 	if (hCFDP) hCFDP->Write();
 	tree->Write();
 
-	auto totalTime = readTime + slowFilterTime + fastFilterTime + cfdFilterTime + pickerTime + otherTime;
-	std::cout << "total  " << duration_cast<microseconds>(totalTime).count() << " us" << std::endl;
-	std::cout << "read   " << duration_cast<microseconds>(readTime).count() << " us" << std::endl;
-	std::cout << "slow   " << duration_cast<microseconds>(slowFilterTime).count() << " us" << std::endl;
-	std::cout << "fast   " << duration_cast<microseconds>(fastFilterTime).count() << " us" << std::endl;
-	std::cout << "cfd    " << duration_cast<microseconds>(cfdFilterTime).count() << " us" << std::endl;
-	std::cout << "pick   " << duration_cast<microseconds>(pickerTime).count() << " us" << std::endl;
-	std::cout << "other  " << duration_cast<microseconds>(otherTime).count() << " us" << std::endl;
+	if (verbose) {
+		auto totalTime = readTime + slowFilterTime + fastFilterTime + cfdFilterTime + pickerTime + otherTime;
+		std::cout << "total  " << duration_cast<microseconds>(totalTime).count() << " us" << std::endl;
+		std::cout << "read   " << duration_cast<microseconds>(readTime).count() << " us" << std::endl;
+		std::cout << "slow   " << duration_cast<microseconds>(slowFilterTime).count() << " us" << std::endl;
+		std::cout << "fast   " << duration_cast<microseconds>(fastFilterTime).count() << " us" << std::endl;
+		std::cout << "cfd    " << duration_cast<microseconds>(cfdFilterTime).count() << " us" << std::endl;
+		std::cout << "pick   " << duration_cast<microseconds>(pickerTime).count() << " us" << std::endl;
+		std::cout << "other  " << duration_cast<microseconds>(otherTime).count() << " us" << std::endl;
+	}
 
 	return;
 }
@@ -677,425 +508,3 @@ void TTreeSimulator::Run(unsigned int entries, RunFlag flag) {
 TTree *TTreeSimulator::Tree() {
 	return tree;
 }
-
-
-// //--------------------------------------------------
-// //			LGTSimulator
-// //--------------------------------------------------
-
-// LGTSimulator::LGTSimulator() {
-// 	tree = nullptr;
-// 	energy = 0;
-// }
-
-// LGTSimulator::~LGTSimulator() {
-// }
-
-
-// void LGTSimulator::SetSL(size_t min, size_t max, size_t step) {
-// 	SLMin = min;
-// 	SLMax = max;
-// 	SLStep = step;
-// }
-
-// void LGTSimulator::SetSG(size_t min, size_t max, size_t step) {
-// 	SGMin = min;
-// 	SGMax = max;
-// 	SGStep = step;
-// }
-
-// void LGTSimulator::SetST(size_t min, size_t max, size_t step) {
-// 	STMin = min;
-// 	STMax = max;
-// 	STStep = step;
-// }
-
-
-// void LGTSimulator::Run(unsigned int entries, RunFlag flag) {
-// 	if (!reader) throw std::runtime_error("Error: Trace reader not found.");
-// 	// check slow filter
-// 	if ((flag & RunFlag::SlowFilter) != RunFlag::None) {
-// 		if (!slowFilter) throw std::runtime_error("Error: slow filter not found.");
-// 		if (!slowPicker) throw std::runtime_error("Error: slow picker not found.");
-// 	} else {
-// 		throw std::runtime_error("Error: this LGTSimulator only run in energy slow filter mode.");
-// 	}
-
-// 	if (!path.Length()) throw std::runtime_error("Error: simulation file path is empty.");
-
-// 	for (size_t SL = SLMin; SL <= SLMax; SL += SLStep) {
-// 		for (size_t SG = SGMin; SG <= SGMax; SG += SGStep) {
-// 			for (size_t ST = STMin; ST <= STMax; ST += STStep) {
-// 				TFile *file = new TFile(TString::Format("%sSL%luSG%luST%lu.root", path.Data(), SL, SG, ST));
-// 				tree = new TTree("tree", "tree of simulation energy with different filter parameters");
-// 				tree->Branch("e", &energy, "energy/s");
-
-// 				// change filter parameters
-// 				((SlowFilter*)slowFilter)->SetParameters(SL, SG);
-
-// 				unsigned int entries100 = entries / 100;
-// 				std::cout << "SL  " << SL << "  SG  " << SG << "  ST  " << ST << "    run   0%";
-// 				std::cout.flush();
-// 				reader->Reset();
-// 				for (unsigned int t = 0; t != entries; ++t) {
-// 					auto &rawData = reader->Read();
-
-// 					auto &slowData = slowFilter->Filter(rawData);
-
-// 					energy = UShort_t(slowPicker->Pick(slowData));
-// 					tree->Fill();
-
-// 					if (t % entries100 == 0) {
-// 						std::cout << "\b\b\b\b" << std::setw(3) << t / entries100 << "%";
-// 						std::cout.flush();
-// 					}
-// 				}
-// 				std::cout << "\b\b\b\b100%" << std::endl;
-
-// 				file->cd();
-// 				tree->Write();
-// 				file->Close();
-// 			}
-// 		}
-// 	}
-// 	return;
-// }
-
-
-
-// CFDTimeSimulator::CFDTimeSimulator() {
-// 	FLMin = 2;
-// 	FLMax = 2;
-// 	FLStep = 1;
-// 	FGMin = 0;
-// 	FGMax = 0;
-// 	FGStep = 1;
-// 	CFDDMin = 1;
-// 	CFDDMax = 1;
-// 	CFDDStep = 1;
-// 	CFDWMin = 0;
-// 	CFDWMax = 0;
-// 	CFDWStep = 1;
-// }
-
-// CFDTimeSimulator::~CFDTimeSimulator() {
-// }
-
-
-// // void CFDTimeSimulator::singleRun(size_t FL, size_t FG, size_t CFDD, size_t CFDW, unsigned int entries_, unsigned int *jentry) {
-
-// // 	TFile *opf = new TFile(TString::Format("%sFL%luFG%luD%luW%lu.root", path.Data(), FL, FG, CFDD, CFDW), "recreate");
-// // 	TTree *tree = new TTree("tree", "simulated cfd tree");
-
-// // 	TH1D *hlts = nullptr;
-// // 	TH1D *hcfd = nullptr;
-// // 	TH1D *hcfdp = nullptr;
-
-// // 	// input data
-// // 	Short_t lts, cfdPoint;
-// // 	Double_t cfd;
-// // 	// branch
-// // 	tree->Branch("lts", &lts, "lts/S");
-// // 	tree->Branch("cfd", &cfd, "cfd/D");
-// // 	tree->Branch("cfdp", &cfdPoint, "cfdp/S");
-
-// // 	// ger period, dt
-// // 	int dt = reader->GetPeriod();
-// // 	XiaFastFilter singleFastFilter(FL, FG, dt);
-// // 	XiaCFDFilter singleCFDFilter(CFDD, CFDW, dt);
-
-// // 	for (*jentry = 0; *jentry != entries_; ++*jentry) {
-// // 		// read raw data
-// // 		auto &rawData = reader->Read(std::this_thread::get_id());
-
-// // 		// fast filter
-// // 		auto &fastData = singleFastFilter.Filter(rawData);
-
-// // 		// calculate timestamp
-// // 		int ts = int(fastPicker->Pick(fastData));
-// // 		lts = Short_t(ts - zeroPoint);
-
-// // 		if (!hlts) {
-// // 			opf->cd();
-// // 			hlts = new TH1D("ht", "local time distribution", 200, -100, 100);
-// // 		}
-// // 		hlts->Fill(lts);
-
-// // 		// cfd filter
-// // 		auto &cfdData = singleCFDFilter.Filter(fastData);
-
-// // 		// calcute cfd fraction
-// // 		cfd = cfdPicker->Pick(cfdData);
-// // 		cfdPoint -= int(cfd) - zeroPoint;
-// // 		cfd -= int(cfd);
-
-// // 		if (!hcfd) {
-// // 			opf->cd();
-// // 			hcfd = new TH1D("hcfd", "cfd distribution", 1000, 0, 1);
-// // 		}
-// // 		hcfd->Fill(cfd);
-
-// // 		if (!hcfdp) {
-// // 			opf->cd();
-// // 			hcfdp = new TH1D("hcfdp", "cfd point distribution", 200, -100, 100);
-// // 		}
-// // 		hcfdp->Fill(cfdPoint);
-
-// // 		tree->Fill();
-// // 	}
-
-// // 	opf->cd();
-// // 	tree->Write();
-// // 	hlts->Write();
-// // 	hcfd->Write();
-// // 	hcfdp->Write();
-// // 	opf->Close();
-// // 	return;
-// // }
-
-// void CFDTimeSimulator::Run(unsigned int entries_, RunFlag flag_) {
-// 	if (!reader) throw std::runtime_error("Error: Trace reader not found.");
-// 	// check cfd filter
-// 	if ((flag_ & RunFlag::CFDFilter) != 0) {
-// 		if (!fastFilter) throw std::runtime_error("Error: Fast filter not found.");
-// 		if (!fastPicker) throw std::runtime_error("Error: Fast picker not found.");
-// 		if (!cfdFilter) throw std::runtime_error("Error: CFD filter not found.");
-// 		if (!cfdPicker) throw std::runtime_error("Error: CFD picker not found.");
-// 	} else {
-// 		throw std::runtime_error("Error: This simulator only run in cfd filter mode.");
-// 	}
-
-// #ifdef MULTI_PROCESS
-// 	ROOT::EnableImplicitMT(true);
-// 	int totalTasks = (FLMax - FLMin) / FLStep + 1;
-// 	totalTasks *= (FGMax - FGMin) / FGStep + 1;
-// 	totalTasks *= (CFDDMax - CFDDMin) / CFDDStep + 1;
-// 	totalTasks *= (CFDWMax - CFDWMin) / CFDWStep + 1;
-
-// 	struct paramSettings {
-// 		size_t FL;
-// 		size_t FG;
-// 		size_t CFDD;
-// 		unsigned int CFDW;
-// 	};
-// 	std::vector<paramSettings> parSets;
-// 	for (size_t FL = FLMin; FL <= FLMax; FL += FLStep) {
-// 		for (size_t FG = FGMin; FG <= FGMax; FG += FGStep) {
-// 			for (size_t CFDD = CFDDMin; CFDD <= CFDDMax; CFDD += CFDDStep) {
-// 				for (unsigned int CFDW = CFDWMin; CFDW <= CFDWMax; CFDW += CFDWStep) {
-// 					parSets.push_back(paramSettings{FL, FG, CFDD, CFDW});
-// 				}
-// 			}
-// 		}
-// 	}
-
-// 	const int process = 7;
-// 	pid_t pids[process];
-// 	int aveTask = (totalTasks-1)/process + 1;
-// 	int remainTask = totalTasks % process;
-
-// 	std::cout << "total " << totalTasks << "  ave " << aveTask << "  remain  " << remainTask << std::endl;
-// 	for (int i = 0; i != process; ++i) {
-// 		int start = aveTask*i;
-// 		start -= i <= remainTask ? 0 : i-remainTask;
-// 		int ends = aveTask*(i+1);
-// 		ends -= (i+1) <= remainTask ? 0 : i+1-remainTask;
-// 		std::cout << i << "  " << start << "  " << ends << std::endl;
-// 	}
-
-// 	// fork childs
-// 	for (int i = 0; i != process; ++i) {
-// 		pids[i] = fork();
-// 		if (pids[i] < 0) {
-// 			std::cerr << "fork: " << strerror(errno) << std::endl;
-// 			abort();
-// 		} else if (pids[i] == 0) {
-// 			int start = aveTask*i;
-// 			start -= i <= remainTask ? 0 : i-remainTask;
-// 			int ends = aveTask*(i+1);
-// 			ends -= (i+1) <= remainTask ? 0 : i+1-remainTask;
-// 			for (int j = start; j != ends; ++j) {
-// 				size_t FL = parSets[j].FL;
-// 				size_t FG = parSets[j].FG;
-// 				size_t CFDD = parSets[j].CFDD;
-// 				unsigned int CFDW = parSets[j].CFDW;
-// 				((XiaFastFilter*)fastFilter)->SetParameters(FL, FG);
-// 				((XiaCFDFilter*)cfdFilter)->SetParameters(CFDD, CFDW);
-
-// 				TFile *opf = new TFile(TString::Format("%sFL%luFG%luD%luW%u.root", path.Data(), FL, FG, CFDD, CFDW), "recreate");
-// 				TTree *tree = new TTree("tree", "simulated cfd tree");
-// 				TH1D *hlts = nullptr;
-// 				TH1D *hcfd = nullptr;
-// 				TH1D *hcfdp = nullptr;
-
-// 				// input data
-// 				Short_t lts, cfdPoint;
-// 				Double_t cfd;
-// 				// branch
-// 				tree->Branch("lts", &lts, "lts/S");
-// 				tree->Branch("cfd", &cfd, "cfd/D");
-// 				tree->Branch("cfdp", &cfdPoint, "cfdp/S");
-
-// 				reader->Reset();
-// 				for (int jentry = 0; jentry != entries_; ++jentry) {
-// 					// read raw data
-// 					auto &rawData = reader->Read();
-// 					// fast filter
-// 					auto &fastData = fastFilter->Filter(rawData);
-
-// 					// calculate timestamp
-// 					int ts = int(fastPicker->Pick(fastData));
-// 					lts = Short_t(ts - zeroPoint);
-
-// 					if (!hlts) hlts = new TH1D("ht", "local time distribution", 200, -100, 100);
-// 					hlts->Fill(lts);
-
-
-// 					// cfd filter
-// 					auto &cfdData = cfdFilter->Filter(fastData);
-
-// 					// calcute cfd fraction
-// 					cfd = cfdPicker->Pick(cfdData);
-// 					cfdPoint = UShort_t(cfd) - zeroPoint;
-// 					cfd -= int(cfd);
-
-// 					if (!hcfd) hcfd = new TH1D("hcfd", "cfd distribution", 1000, 0, 1);
-// 					hcfd->Fill(cfd);
-
-// 					if (!hcfdp) hcfdp = new TH1D("hcfdp", "cfd point distribution", 200, -100, 100);
-// 					hcfdp->Fill(cfdPoint);
-
-// 					tree->Fill();
-
-// 				}
-
-// 				tree->Write();
-// 				hlts->Write();
-// 				hcfd->Write();
-// 				hcfdp->Write();
-// 				opf->Close();
-// 			}
-// 			exit(0);
-// 		}
-// 	}
-
-// 	int status;
-// 	pid_t pid;
-// 	int n = process;
-// 	while (n > 0) {
-// 		pid = wait(&status);
-// 		std::cout << "Child with pid " << pid << " exit with status " << status << "." << std::endl;
-// 		--n;
-// 	}
-
-
-
-// #else					// single thread
-// 	for (size_t FL = FLMin; FL <= FLMax; FL += FLStep) {
-// 		for (size_t FG = FGMin; FG <= FGMax; FG += FGStep) {
-// 			for (size_t CFDD = CFDDMin; CFDD <= CFDDMax; CFDD += CFDDStep) {
-// 				for (unsigned int CFDW = CFDWMin; CFDW <= CFDWMax; CFDW += CFDWStep) {
-// 					((XiaFastFilter*)fastFilter)->SetParameters(FL, FG);
-// 					((XiaCFDFilter*)cfdFilter)->SetParameters(CFDD, CFDW);
-
-// 					TFile *opf = new TFile(TString::Format("%sFL%luFG%luD%luW%u.root", path.Data(), FL, FG, CFDD, CFDW), "recreate");
-// 					TTree *tree = new TTree("tree", "simulated cfd tree");
-// 					TH1D *hlts = nullptr;
-// 					TH1D *hcfd = nullptr;
-// 					TH1D *hcfdp = nullptr;
-
-// 					// input data
-// 					Short_t lts, cfdPoint;
-// 					Double_t cfd;
-// 					// branch
-// 					tree->Branch("lts", &lts, "lts/S");
-// 					tree->Branch("cfd", &cfd, "cfd/D");
-// 					tree->Branch("cfdp", &cfdPoint, "cfdp/S");
-
-// 					std::cout << "FL  " << FL << "  FG  " << FG << "  CFDD  " << CFDD << "  CFDW  " << CFDW;
-// 					std::cout << "    " << std::setw(3) << 0 << "%";
-// 					std::cout.flush();
-// 					int entries100 = entries_ / 100;
-// 					reader->Reset();
-// 					for (unsigned int jentry = 0; jentry != entries_; ++jentry) {
-// 						// read raw data
-// 						auto &rawData = reader->Read();
-// 						// fast filter
-// 						auto &fastData = fastFilter->Filter(rawData);
-
-// 						// calculate timestamp
-// 						int ts = int(fastPicker->Pick(fastData));
-// 						lts = Short_t(ts - zeroPoint);
-
-// 						if (!hlts) hlts = new TH1D("ht", "local time distribution", 200, -100, 100);
-// 						hlts->Fill(lts);
-
-
-// 						// cfd filter
-// 						auto &cfdData = cfdFilter->Filter(fastData);
-
-// 						// calcute cfd fraction
-// 						cfd = cfdPicker->Pick(cfdData);
-// 						cfdPoint = UShort_t(cfd) - zeroPoint;
-// 						cfd -= int(cfd);
-
-// 						if (!hcfd) hcfd = new TH1D("hcfd", "cfd distribution", 1000, 0, 1);
-// 						hcfd->Fill(cfd);
-
-// 						if (!hcfdp) hcfdp = new TH1D("hcfdp", "cfd point distribution", 200, -100, 100);
-// 						hcfdp->Fill(cfdPoint);
-
-// 						tree->Fill();
-
-
-// 						if (jentry % entries100 == 0) {
-// 							std::cout << "\b\b\b\b" << std::setw(3) << jentry / entries100 << "%";
-// 							std::cout.flush();
-// 						}
-// 					}
-// 					std::cout << "\b\b\b\b100%" << std::endl;
-
-// 					tree->Write();
-// 					hlts->Write();
-// 					hcfd->Write();
-// 					hcfdp->Write();
-// 					opf->Close();
-// 				}
-// 			}
-// 		}
-// 	}
-
-// #endif
-// }
-
-
-
-// void CFDTimeSimulator::SetFL(size_t min, size_t max, size_t step) {
-// 	FLMin = min;
-// 	FLMax = max;
-// 	FLStep = step;
-// 	return;
-// }
-
-
-// void CFDTimeSimulator::SetFG(size_t min, size_t max, size_t step) {
-// 	FGMin = min;
-// 	FGMax = max;
-// 	FGStep = step;
-// 	return;
-// }
-
-// void CFDTimeSimulator::SetCFDD(size_t min, size_t max, size_t step) {
-// 	CFDDMin = min;
-// 	CFDDMax = max;
-// 	CFDDStep = step;
-// 	return;
-// }
-
-
-// void CFDTimeSimulator::SetCFDW(unsigned int min, unsigned int max, unsigned int step) {
-// 	CFDWMin = min;
-// 	CFDWMax = max;
-// 	CFDWStep = step;
-// 	return;
-// }

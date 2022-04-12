@@ -9,7 +9,8 @@ help() {
 	echo ""
 	echo "OPTIONS:"
 	echo "    -h            Print this help."
-	echo "    -v            Print version."
+	echo "    -V            Print version."
+	echo "    -v            Print verbose information."
 	echo "    -r[run]       Set run number, necassary."
 	echo "    -m            Run in multi-thread mode."
 	echo "    -p[name]      Set project name, necassary."
@@ -49,16 +50,19 @@ pickerType="tt:le:zcl"
 runFlagStr="all"
 multiThread=false
 entries=0
+verbose=false
 
-while getopts ":v :h :m r: p: s: f: b: w: z: a: l: g: e: t: F: P:" flag;
+while getopts ":v :h :V :m r: p: s: f: b: w: z: a: l: g: e: t: F: P:" flag;
 do
 	case $flag in
 		h) # display help
 			help
 			exit;;
-		v) # display version
+		V) # display version
 			echo "$0 version 1.0"
 			exit;;
+		v) # verbose information
+			verbose=true;;
 		r) # set run number
 			run=$OPTARG;;
 		p) # set project name
@@ -321,6 +325,8 @@ sed -i "/^.*SlowPicker.*/c\	\"SlowPicker\": \"${slowPickerType}\"," ${configFile
 sed -i "/^.*FastPicker.*/c\	\"FastPicker\": \"${fastPickerType}\"," ${configFile}
 sed -i "/^.*CFDPicker.*/c\	\"CFDPicker\": \"${cfdPickerType}\"," ${configFile}
 sed -i "/^.*CFDCubic.*/c\	\"CFDCubic\": ${cfdCubic}," ${configFile}
+# edit verbose
+sed -i "/^.*Verbose.*/c\	\"Verbose\": ${verbose}," ${configFile}
 # edit multi-thread option
 sed -i "/^.*MultiThread.*/c\	\"MultiThread\": ${multiThread}," ${configFile}
 

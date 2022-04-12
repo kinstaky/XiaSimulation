@@ -145,18 +145,7 @@ int main(int argc, char **argv) {
 	}
 #endif
 
-	// std::cout << std::left << std::setw(8) << "FL" << std::setw(8) << "FG" << std::setw(8) << "CFDD" << std::setw(8) << "CFDW" << std::setw(8) << "result" << std::endl;
-	// size_t index = 0;
-	// for (int FL = FLMin; FL <= FLMax; FL += FLStep) {
-	// 	for (int FG = FGMin; FG <= FGMax; FG += FGStep) {
-	// 		for (int CFDD = CFDDMin; CFDD <= CFDDMax; CFDD += CFDDStep) {
-	// 			for (int CFDW = CFDWMin; CFDW <= CFDWMax; CFDW += CFDWStep) {
-	// 				std::cout << std::setw(8) << FL << std::setw(8) << FG << std::setw(8) << CFDD << std::setw(8) << CFDW << std::setw(8) << std::setprecision(2) << std::fixed << result[index] << std::endl;
-	// 				++index;
-	// 			}
-	// 		}
-	// 	}
-	// }
+
 	for (const auto &[file, res] : result) {
 		std::cout << file << "  " << std::setprecision(2) << std::fixed << res << std::endl;
 	}

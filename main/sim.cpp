@@ -92,6 +92,7 @@ void TTreeSimulate(const char *configFileName) {
 	rFlag runFlag = js["RunFlag"];
 	unsigned int entries = js["Entries"];
 	size_t zeroPoint = js["ZeroPoint"];
+	bool verbose = js["Verbose"];
 
 	std::string slowFilterType = js["SlowFilter"];
 	std::string slowPickerType = js["SlowPicker"];
@@ -471,6 +472,7 @@ void TTreeSimulate(const char *configFileName) {
 				}
 				simulator->SetFileName(simFileName.c_str());
 				simulator->SetZeroPoint(zeroPoint);
+				simulator->SetVerbose(verbose);
 
 				++index;
 			}

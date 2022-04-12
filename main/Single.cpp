@@ -16,13 +16,12 @@
 #include "TCut.h"
 
 #include "../lib/json.hpp"
-
-#ifdef MULTI_THREAD
 #include "../lib/ThreadPool.h"
-#endif
 
 int fbw = 50;					// front back width
 int sw = 200;					// same side width
+bool verbose = false;
+bool multiThread = false;
 
 // task status
 const int StatusError = -1;		// error while running
@@ -67,14 +66,14 @@ void NormSingle(int xStrip_, int yStrip_, bool direction) {
 
 
 void printMap(const std::multimap<Long64_t, Event> &events) {
-    int i = 0;
-    std::cout << "time    energy     strip    lts    cfd    cfdp" << std::endl;
-    for (auto ievent = events.begin(); ievent != events.end(); ++ievent) {
-        std::cout << ievent->first << "  " << "  " << ievent->second.energy << "  " << ievent->second.strip;
-        std::cout << "  " << ievent->second.lts << "  " << ievent->second.cfd << "  " << ievent->second.cfdp << std::endl;
-        ++i;
-        if (i==10) break;
-    }
+	int i = 0;
+	std::cout << "time    energy     strip    lts    cfd    cfdp" << std::endl;
+	for (auto ievent = events.begin(); ievent != events.end(); ++ievent) {
+		std::cout << ievent->first << "  " << "  " << ievent->second.energy << "  " << ievent->second.strip;
+		std::cout << "  " << ievent->second.lts << "  " << ievent->second.cfd << "  " << ievent->second.cfdp << std::endl;
+		++i;
+		if (i==10) break;
+	}
 }
 
 void SingleFileSingleHit(const std::string &inputFile, const std::string &sepFile, const std::string &outputFile, int *status = nullptr) {
@@ -151,16 +150,17 @@ void SingleFileSingleHit(const std::string &inputFile, const std::string &sepFil
 		}
 	}
 
-#ifndef MULTI_THREAD
-	std::cout << "----------x peaks----------" << std::endl;
-	for (int i = 0; i != stripCount[0]; ++i) {
-		std::cout << i << "  " << xPeaks[i][0] << "  " << xPeaks[i][1] << std::endl;
+	if (verbose) {
+		std::cout << "----------x peaks----------" << std::endl;
+		for (int i = 0; i != stripCount[0]; ++i) {
+			std::cout << i << "  " << xPeaks[i][0] << "  " << xPeaks[i][1] << std::endl;
+		}
+		std::cout << "----------y peaks----------" << std::endl;
+		for (int i = 0; i != stripCount[1]; ++i) {
+			std::cout << i << "  " << yPeaks[i][0] << "  " << yPeaks[i][1] << std::endl;
+		}
+
 	}
-	std::cout << "----------y peaks----------" << std::endl;
-	for (int i = 0; i != stripCount[1]; ++i) {
-		std::cout << i << "  " << yPeaks[i][0] << "  " << yPeaks[i][1] << std::endl;
-	}
-#endif
 
 	// normalizing
 	for (int i = 0; i != 32; ++i) {
@@ -178,17 +178,16 @@ void SingleFileSingleHit(const std::string &inputFile, const std::string &sepFil
 		NormSingle(i, 0, false);
 	}
 
-#ifndef MULTI_THREAD
-	std::cout << "----------x parameters----------" << std::endl;
-	for (int i = 0; i != stripCount[0]; ++i) {
-		std::cout << i << "  " << xParams[i][0] << "  " << xParams[i][1] << std::endl;
+	if (verbose) {
+		std::cout << "----------x parameters----------" << std::endl;
+		for (int i = 0; i != stripCount[0]; ++i) {
+			std::cout << i << "  " << xParams[i][0] << "  " << xParams[i][1] << std::endl;
+		}
+		std::cout << "----------y parameters----------" << std::endl;
+		for (int i = 0; i != stripCount[1]; ++i) {
+			std::cout << i << "  " << yParams[i][0] << "  " << yParams[i][1] << std::endl;
+		}
 	}
-	std::cout << "----------y parameters----------" << std::endl;
-	for (int i = 0; i != stripCount[1]; ++i) {
-		std::cout << i << "  " << yParams[i][0] << "  " << yParams[i][1] << std::endl;
-	}
-#endif
-
 
 	// input and output data
 	Long64_t ts;
@@ -208,37 +207,40 @@ void SingleFileSingleHit(const std::string &inputFile, const std::string &sepFil
 	std::multimap<Long64_t, Event> frontEvents;
 	std::multimap<Long64_t, Event> backEvents;
 
-	 // loop and fill the map
-    printf("Filling map   0%%");
-    fflush(stdout);
-    Long64_t nentry = ipt->GetEntries();
-    Long64_t nentry100 = nentry / 100 + 1;
-    for (Long64_t jentry = 0; jentry != nentry; ++jentry) {
-        ipt->GetEntry(jentry);
+	// loop and fill the map
+	if (verbose) {
+		printf("Filling map   0%%");
+		fflush(stdout);
+	}
+	Long64_t nentry = ipt->GetEntries();
+	Long64_t nentry100 = nentry / 100 + 1;
+	for (Long64_t jentry = 0; jentry != nentry; ++jentry) {
+		ipt->GetEntry(jentry);
 
-        Long64_t nts = ts * 10;
-        Short_t nlts = lts * 10;
-        Double_t ncfd = cfd * 10.0;
-        Short_t ncfdp = cfdp * 10;
+		Long64_t nts = ts * 10;
+		Short_t nlts = lts * 10;
+		Double_t ncfd = cfd * 10.0;
+		Short_t ncfdp = cfdp * 10;
 
-        if (side == 0) {
-        	Double_t ne = xParams[strip][0] + xParams[strip][1]*energy;
-        	frontEvents.insert(std::make_pair(nts, Event{ne, strip, nlts, ncfd, ncfdp, false}));
-        } else {
-        	Double_t ne = yParams[strip][0] + yParams[strip][1]*energy;
-            backEvents.insert(std::make_pair(nts, Event{ne, strip, nlts, ncfd, ncfdp, false}));
-        }
+		if (side == 0) {
+			Double_t ne = xParams[strip][0] + xParams[strip][1]*energy;
+			frontEvents.insert(std::make_pair(nts, Event{ne, strip, nlts, ncfd, ncfdp, false}));
+		} else {
+			Double_t ne = yParams[strip][0] + yParams[strip][1]*energy;
+			backEvents.insert(std::make_pair(nts, Event{ne, strip, nlts, ncfd, ncfdp, false}));
+		}
 
-        if (jentry % nentry100 == 0) {
-            printf("\b\b\b\b%3lld%%", jentry / nentry100);
-            fflush(stdout);
-        }
-    }
-    printf("\b\b\b\b100%%\n");
+		if (verbose && (jentry % nentry100 == 0)) {
+			printf("\b\b\b\b%3lld%%", jentry / nentry100);
+			fflush(stdout);
+		}
+	}
+	if (verbose) {
+		printf("\b\b\b\b100%%\n");
 
-    printMap(frontEvents);
-    printMap(backEvents);
-
+		printMap(frontEvents);
+		printMap(backEvents);
+	}
 
 	opf->cd();
 	TTree *opt = new TTree("tree", "single hit tree");
@@ -263,8 +265,10 @@ void SingleFileSingleHit(const std::string &inputFile, const std::string &sepFil
 	opt->Branch("bct", &bct, "bct/D");
 	opt->Branch("bcp", &bcp, "bcp/S");
 
-	printf("Filling new tree   0%%");
-	fflush(stdout);
+	if (verbose) {
+		printf("Filling new tree   0%%");
+		fflush(stdout);
+	}
 	Long64_t jentry = 0;
 	nentry = frontEvents.size();
 	nentry100 = nentry / 100 + 1;
@@ -319,18 +323,17 @@ void SingleFileSingleHit(const std::string &inputFile, const std::string &sepFil
 		}
 
 		jentry++;
-		if (jentry % nentry100 == 0) {
+		if (verbose && (jentry % nentry100 == 0)) {
 			printf("\b\b\b\b%3lld%%", jentry / nentry100);
 			fflush(stdout);
 		}
 	}
-	printf("\b\b\b\b100%%\n");
+	if (verbose) {
+		printf("\b\b\b\b100%%\n");
 
-
-#ifndef MULTI_THREAD
-	std::cout << "front one hit rate " << nentry << "/" << frontEvents.size() << "   " << double(nentry)/double(frontEvents.size()) << std::endl;
-    std::cout << "back one hit rate " << nentry << "/" << backEvents.size() << "   " << double(nentry)/double(backEvents.size()) << std::endl;
-#endif
+		std::cout << "front one hit rate " << nentry << "/" << frontEvents.size() << "   " << double(nentry)/double(frontEvents.size()) << std::endl;
+		std::cout << "back one hit rate " << nentry << "/" << backEvents.size() << "   " << double(nentry)/double(backEvents.size()) << std::endl;
+	}
 
 
 	opt->Write();
@@ -375,65 +378,67 @@ int main(int argc, char **argv) {
 	stripCount[1] = js["Strips"][1];
 	fbw = js["fbw"];
 	sw = js["sw"];
+	verbose = js["Verbose"];
+	multiThread = js["MultiThread"];
 
-#ifdef MULTI_THREAD
-	ThreadPool pool(js["Threads"]);
-	// count of files
-	unsigned int totalTasks = 0;
-	for (const auto &entry : std::filesystem::directory_iterator(simPath)) {
-		if (entry.is_directory()) continue;
-		++totalTasks;
-	}
-	int *taskStatus = new int[totalTasks];
-	for (auto &status : taskStatus) {
-		status = StatusInitial;
-	}
-	std::vector<std::string> fileNames;
-	size_t index = 0;
-	for (const auto &entry : std::filesystem::directory_iterator(simPath)) {
-		if (entry.is_directory()) continue;
-		auto &path = entry.path();
-		std::string inputFileName = std::string(path);
-		std::string outputFileName = singlePath + std::string(path.filename());
-		fileNames.emplace_back(path.filename());
-		pool.enqueue(SingleFileSingleHit, inputFileName, sepFileName, outputFileName, taskStatus+index);
-		++index;
-	}
-
-	unsigned int checkTasks = 0;
-	while (checkTasks < totalTasks) {
-		statucLock.lock();
-		index = 0;
-		for (auto &status : taskStatus) {
-			if (status == StatusFinished) {
-				status = StatusChecked;
-				++checkTasks;
-				std::cout << "[" << checkTasks << "/" << totalTasks << "]" << "  " << fileNames[index] << "  finished." << std::endl;
-			} else if (status == StatusError) {
-				status = StatusChecked;
-				++checkStatus;
-				std::cout << "[" << checkStatus << "/" << totalTasks << "]" << "  " << fileNames[index] << "  ERROR!!!" << std::endl;
-			}
-			++ index;
+	if (multiThread) {
+		ThreadPool pool(js["Threads"]);
+		// count of files
+		unsigned int totalTasks = 0;
+		for (const auto &entry : std::filesystem::directory_iterator(simPath)) {
+			if (entry.is_directory()) continue;
+			++totalTasks;
 		}
-		statusLock.unlock();
-		std::this_thread::sleep_for(std::chrono::milliseconds(300));
+		int *taskStatus = new int[totalTasks];
+		for (size_t i = 0; i != totalTasks; ++i) {
+			taskStatus[i] = StatusInitial;
+		}
+		std::vector<std::string> fileNames;
+		size_t index = 0;
+		for (const auto &entry : std::filesystem::directory_iterator(simPath)) {
+			if (entry.is_directory()) continue;
+			auto &path = entry.path();
+			std::string inputFileName = std::string(path);
+			std::string outputFileName = singlePath + std::string(path.filename());
+			fileNames.emplace_back(path.filename());
+			pool.enqueue(SingleFileSingleHit, inputFileName, sepFileName, outputFileName, taskStatus+index);
+			++index;
+		}
+
+		unsigned int checkTasks = 0;
+		while (checkTasks < totalTasks) {
+			statusLock.lock();
+			index = 0;
+			for (size_t i = 0; i != totalTasks; ++i) {
+				if (taskStatus[i] == StatusFinished) {
+					taskStatus[i] = StatusChecked;
+					++checkTasks;
+					std::cout << "[" << checkTasks << "/" << totalTasks << "]" << "  " << fileNames[index] << "  finished." << std::endl;
+				} else if (taskStatus[i] == StatusError) {
+					taskStatus[i] = StatusChecked;
+					++checkTasks;
+					std::cout << "[" << checkTasks << "/" << totalTasks << "]" << "  " << fileNames[index] << "  ERROR!!!" << std::endl;
+				}
+				++index;
+			}
+			statusLock.unlock();
+			std::this_thread::sleep_for(std::chrono::milliseconds(300));
+		}
+
+
+		delete[] taskStatus;
+
+	} else {
+
+		for (const auto &entry : std::filesystem::directory_iterator(simPath)) {
+			if (entry.is_directory()) continue;
+			auto &path = entry.path();
+			std::string inputFileName = std::string(path);
+			std::string outputFileName = singlePath + std::string(path.filename());
+
+			SingleFileSingleHit(inputFileName, sepFileName, outputFileName);
+		}
 	}
-
-
-	delete[] taskStatus;
-
-#else
-
-	for (const auto &entry : std::filesystem::directory_iterator(simPath)) {
-		if (entry.is_directory()) continue;
-		auto &path = entry.path();
-		std::string inputFileName = std::string(path);
-		std::string outputFileName = singlePath + std::string(path.filename());
-
-		SingleFileSingleHit(inputFileName, sepFileName, outputFileName);
-	}
-#endif
 
 
 	return 0;
